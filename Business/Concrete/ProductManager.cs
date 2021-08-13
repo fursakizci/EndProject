@@ -1,7 +1,9 @@
 ﻿using Business.Abstract;
+using Business.BusinessAspects.Autofac;
 using Business.CCS;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
+using Core.Aspects.Autofac.Caching;
 using Core.Aspects.Autofac.Validation;
 using Core.Utilities.Business;
 using Core.Utilities.Results;
@@ -15,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace Business.Concrete
 {
@@ -30,8 +33,9 @@ namespace Business.Concrete
             _categoryService = categoryService;
     }
         //Claim
-        //[SecuredOperations("admin,editor")]
+        [SecuredOperation("product.add,edmin")]
         [ValidationAspect(typeof(ProductValidator))]
+        [CacheRemoveAspect("IProductService.Get")] 
         public IResult Add(Product product)
         {
             //var context = new ValidationContext<Product>(product);
@@ -57,6 +61,7 @@ namespace Business.Concrete
            
         }
 
+        [CacheAspect]
         public IDataResult<List<Product>> GetAll()
         {
             //is kodlari
@@ -74,6 +79,7 @@ namespace Business.Concrete
             return new SuccessDataResult<List<Product>>(_productDal.GetAll(p => p.CategoryId == id));
         }
 
+        [CacheAspect]
         public IDataResult<Product> GetById(int productId)
         {
             return new SuccessDataResult<Product>(_productDal.Get(p=>p.ProductId == productId));
@@ -90,6 +96,7 @@ namespace Business.Concrete
         }
 
         [ValidationAspect(typeof(ProductValidator))]
+        [CacheRemoveAspect("IProductService.Get")]
         public IResult Update(Product product)
         {
             throw new NotImplementedException();
@@ -123,6 +130,28 @@ namespace Business.Concrete
                 return new ErrorResult(Messages.CategoryLimitExceded);
             }
             return new SuccessResult();
+        }
+
+        //[TransactionScopeAspect]
+        public IResult AddTransationalTest(Product product)
+        {
+            //using (TransactionScope scope = new TransactionScope())
+            //{
+            //    try
+            //    {
+            //        Add(product);
+            //        if(product.UnitPrice < 10)
+            //        {
+            //            throw new Exception("");
+            //        }
+            //        scope.Complete();
+            //    }
+            //    catch
+            //    {
+            //        scope.Dispose();
+            //    }
+            //}
+            return null;
         }
     }
 }
